@@ -8,78 +8,75 @@ import pandas as pd
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Product Factory Pro", layout="wide", initial_sidebar_state="expanded")
 
-# --- UI STYLING: MINIMALIST WHITE ---
+# --- UI STYLING: DIM SOFT MODE ---
 st.markdown("""
     <style>
-        /* Main App Background - Clean White */
+        /* Main App Background - Soft Neutral Grey */
         .stApp {
-            background-color: #FFFFFF;
-            color: #1A1A1A;
+            background-color: #F0F2F6;
+            color: #31333F;
         }
         
-        /* Sidebar Styling - Soft Grey */
+        /* Sidebar Styling - Slightly Darker Grey for contrast */
         [data-testid="stSidebar"] {
-            background-color: #F8F9FA;
-            border-right: 1px solid #E0E0E0;
+            background-color: #E6E9EF;
+            border-right: 1px solid #D1D5DB;
         }
 
-        /* Typography - Dark Slate for readability */
+        /* Typography - Muted Dark Slate */
         h1, h2, h3, h4, label, .stWidgetLabel p {
-            color: #1A1A1A !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #262730 !important;
+            font-family: 'Inter', sans-serif;
         }
 
-        /* Input Fields - White with Grey Borders */
+        /* Input Fields - Clean White with soft borders */
         .stTextInput input, .stSelectbox div, .stTextArea textarea, .stNumberInput input {
             background-color: #FFFFFF !important;
-            color: #1A1A1A !important;
-            border: 1px solid #CCCCCC !important;
-            border-radius: 4px !important;
+            color: #31333F !important;
+            border: 1px solid #C4C9D0 !important;
+            border-radius: 8px !important;
         }
 
-        /* BUTTONS - Professional Blue with White Text */
+        /* BUTTONS - Muted Navy Blue (Less bright) */
         .stButton>button {
             width: 100%; 
-            border-radius: 4px; 
+            border-radius: 8px; 
             border: none;
-            background-color: #007BFF !important; 
+            background-color: #4A90E2 !important; 
             color: #FFFFFF !important;
             font-weight: 600 !important;
             cursor: pointer !important;
-            transition: 0.2s;
         }
         .stButton>button:hover {
-            background-color: #0056B3 !important;
+            background-color: #357ABD !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         /* File Uploader - Blue Button */
         [data-testid="stFileUploadDropzone"] button {
-            background-color: #007BFF !important;
+            background-color: #4A90E2 !important;
             color: #FFFFFF !important;
-            cursor: pointer !important;
         }
 
-        /* Tabs styling - Simple & Modern */
-        .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+        /* Tabs styling - Subtle */
         .stTabs [data-baseweb="tab"] {
-            color: #666666;
-            padding: 10px 20px;
+            color: #555E6D;
+            padding: 8px 16px;
         }
         .stTabs [data-baseweb="tab--active"] {
-            color: #007BFF !important;
-            border-bottom: 2px solid #007BFF !important;
-            font-weight: bold;
+            color: #4A90E2 !important;
+            border-bottom: 2px solid #4A90E2 !important;
         }
 
-        /* Download Button - Success Green */
+        /* Download Button - Muted Sage Green */
         .stDownloadButton>button {
-            background-color: #28A745 !important;
+            background-color: #52B788 !important;
             color: #FFFFFF !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR: PROMPT GENERATOR (All logic preserved) ---
+# --- SIDEBAR: PROMPT GENERATOR (Logic Fully Intact) ---
 st.sidebar.title("🤖 AI Prompt Studio")
 currency = st.sidebar.selectbox("Currency", ["PKR", "USD", "AED", "GBP", "EUR"])
 category = st.sidebar.selectbox("Category", ["Clothing", "Shoes", "Jewelry", "Stationery", "Paper Soap"])
@@ -117,7 +114,7 @@ else: # Paper Soap
     need_size_chart = False
 
 prod_name = st.sidebar.text_input("Product Name", "New Collection")
-focus_kw = st.sidebar.text_input("Focus Keyword", "premium")
+focus_kw = st.sidebar.text_input("Focus Keyword", "premium quality")
 extra_details = st.sidebar.text_area("Extra Details")
 
 st.sidebar.divider()
@@ -165,7 +162,7 @@ with tab2:
                 "Waist": ["28", "30", "32", "34", "38", "42"],
                 "Length": ["27", "28", "29", "30", "31", "32"]
             }
-        else:
+        else: # Shoes
             st.subheader("👟 Shoe Size Conversion")
             size_data = {
                 "EU Size": ["38", "39", "40", "41", "42", "43", "44"],
@@ -174,9 +171,9 @@ with tab2:
             }
         
         df = pd.DataFrame(size_data)
-        st.table(df) # Clean static table for copying
+        st.table(df)
         csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Size Chart (CSV)", data=csv, file_name=f"{category}_size_chart.csv", mime="text/csv")
+        st.download_button("📥 Download Chart (CSV)", data=csv, file_name=f"{category}_size_chart.csv", mime="text/csv")
 
 # --- TAB 3: AI PROMPT HUB ---
 with tab3:
@@ -185,8 +182,7 @@ with tab3:
         prompt_text = f"""
         Act as a Senior E-commerce SEO Copywriter.
         Product: {prod_name} ({gender if gender else ''} {category})
-        Fabric/Material: {attr1}
-        Target Group: {attr2}
+        Attributes: {attr1}, {attr2}
         Focus Keyword: {focus_kw}
         Details: {extra_details}
 

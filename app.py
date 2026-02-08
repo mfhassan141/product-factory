@@ -8,44 +8,88 @@ import pandas as pd
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Product Factory Pro", layout="wide", initial_sidebar_state="expanded")
 
-# --- UI STYLING ---
+# --- UI STYLING: MINIMALIST WHITE ---
 st.markdown("""
     <style>
-        .stApp { background-color: #0B0E14; color: #E6edf3; }
-        [data-testid="stSidebar"] { background-color: #161B22; border-right: 1px solid #30363D; }
-        h1, h2, h3, h4, label, .stWidgetLabel p { color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
+        /* Main App Background - Clean White */
+        .stApp {
+            background-color: #FFFFFF;
+            color: #1A1A1A;
+        }
         
+        /* Sidebar Styling - Soft Grey */
+        [data-testid="stSidebar"] {
+            background-color: #F8F9FA;
+            border-right: 1px solid #E0E0E0;
+        }
+
+        /* Typography - Dark Slate for readability */
+        h1, h2, h3, h4, label, .stWidgetLabel p {
+            color: #1A1A1A !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Input Fields - White with Grey Borders */
         .stTextInput input, .stSelectbox div, .stTextArea textarea, .stNumberInput input {
-            background-color: #0D1117 !important; color: #FFFFFF !important;
-            border: 1px solid #30363D !important; border-radius: 6px !important;
+            background-color: #FFFFFF !important;
+            color: #1A1A1A !important;
+            border: 1px solid #CCCCCC !important;
+            border-radius: 4px !important;
         }
 
+        /* BUTTONS - Professional Blue with White Text */
         .stButton>button {
-            width: 100%; border-radius: 6px; border: none;
-            background-color: #58A6FF !important; color: #000000 !important;
-            font-weight: 700 !important; cursor: pointer !important;
-        }
-        .stButton>button:hover { background-color: #FFFFFF !important; }
-
-        .stDownloadButton>button {
-            background-color: #238636 !important; color: #FFFFFF !important;
+            width: 100%; 
+            border-radius: 4px; 
+            border: none;
+            background-color: #007BFF !important; 
+            color: #FFFFFF !important;
+            font-weight: 600 !important;
             cursor: pointer !important;
+            transition: 0.2s;
+        }
+        .stButton>button:hover {
+            background-color: #0056B3 !important;
+        }
+
+        /* File Uploader - Blue Button */
+        [data-testid="stFileUploadDropzone"] button {
+            background-color: #007BFF !important;
+            color: #FFFFFF !important;
+            cursor: pointer !important;
+        }
+
+        /* Tabs styling - Simple & Modern */
+        .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+        .stTabs [data-baseweb="tab"] {
+            color: #666666;
+            padding: 10px 20px;
+        }
+        .stTabs [data-baseweb="tab--active"] {
+            color: #007BFF !important;
+            border-bottom: 2px solid #007BFF !important;
+            font-weight: bold;
+        }
+
+        /* Download Button - Success Green */
+        .stDownloadButton>button {
+            background-color: #28A745 !important;
+            color: #FFFFFF !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR: PROMPT GENERATOR ---
+# --- SIDEBAR: PROMPT GENERATOR (All logic preserved) ---
 st.sidebar.title("🤖 AI Prompt Studio")
 currency = st.sidebar.selectbox("Currency", ["PKR", "USD", "AED", "GBP", "EUR"])
 category = st.sidebar.selectbox("Category", ["Clothing", "Shoes", "Jewelry", "Stationery", "Paper Soap"])
 
 attr1, attr2, gender = "", "", ""
 
-# --- RESTORED CATEGORY LOGIC ---
 if category == "Clothing":
     gender = st.sidebar.radio("Target Gender", ["Male", "Female", "Unisex"])
     fabric_choice = st.sidebar.selectbox("Fabric", ["Cotton", "Lawn", "Silk", "Linen", "Chiffon", "Jersey", "Wool", "Other"])
-    attr1 = st.sidebar.text_input("Manual Fabric") if fabric_choice == "Other" else fabric_choice
+    attr1 = st.sidebar.text_input("Manual Fabric Entry") if fabric_choice == "Other" else fabric_choice
     attr2 = st.sidebar.selectbox("Age Group", ["Newly Born", "Child", "Teenage", "Adult"])
     need_size_chart = st.sidebar.checkbox("Include Size Chart?", value=True)
 
@@ -61,7 +105,6 @@ elif category == "Jewelry":
     need_size_chart = False
 
 elif category == "Stationery":
-    # RESTORED MULTI-SELECT
     attr1 = st.sidebar.multiselect("Select Items", 
         ["Pencil", "Eraser", "Sharpener", "Scale", "Geometry Box", "Journal", "Pen", "Color Pencils", "Color Markers"], 
         default=["Pencil"])
@@ -115,43 +158,44 @@ with tab2:
     if need_size_chart:
         st.divider()
         if category == "Clothing":
-            st.subheader("📏 Clothing Size Chart (Inches)")
+            st.subheader("📏 Clothing Size Chart")
             size_data = {
                 "Size": ["XS", "S", "M", "L", "XL", "XXL"],
                 "Chest": ["34", "36", "38", "40", "44", "48"],
                 "Waist": ["28", "30", "32", "34", "38", "42"],
                 "Length": ["27", "28", "29", "30", "31", "32"]
             }
-        else: # Shoes
+        else:
             st.subheader("👟 Shoe Size Conversion")
             size_data = {
                 "EU Size": ["38", "39", "40", "41", "42", "43", "44"],
                 "UK Size": ["5", "6", "6.5", "7.5", "8", "9", "10"],
-                "US Size (Men)": ["5.5", "6.5", "7.5", "8.5", "9", "10", "11"]
+                "US Size": ["5.5", "6.5", "7.5", "8.5", "9", "10", "11"]
             }
         
         df = pd.DataFrame(size_data)
-        st.dataframe(df, use_container_width=True)
+        st.table(df) # Clean static table for copying
         csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Chart (CSV)", data=csv, file_name=f"{category}_size_chart.csv", mime="text/csv")
+        st.download_button("📥 Download Size Chart (CSV)", data=csv, file_name=f"{category}_size_chart.csv", mime="text/csv")
 
 # --- TAB 3: AI PROMPT HUB ---
 with tab3:
     if generate_btn:
         st.success("✅ SEO Prompt Generated")
         prompt_text = f"""
-        Act as a Senior E-commerce SEO Copywriter for ChatGPT & Gemini.
+        Act as a Senior E-commerce SEO Copywriter.
         Product: {prod_name} ({gender if gender else ''} {category})
-        Attributes: {attr1}, {attr2}
+        Fabric/Material: {attr1}
+        Target Group: {attr2}
         Focus Keyword: {focus_kw}
-        Additional Info: {extra_details}
+        Details: {extra_details}
 
         Requirements:
-        1. SEO Meta Title (75 chars)
-        2. Meta Description (160 chars) - Start with focus keyword.
-        3. URL Slug (include focus keyword).
-        4. Short Description with H1 Heading.
-        5. Long, humanized blog-style product story.
-        6. 10 High-volume SEO tags.
+        1. Meta Title (75 chars)
+        2. Meta Description (160 chars)
+        3. URL Slug
+        4. Short Description with H1 Heading
+        5. Long, humanized blog-style product story
+        6. 10 High-volume SEO tags
         """
         st.code(prompt_text, language="markdown")

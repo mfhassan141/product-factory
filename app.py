@@ -8,28 +8,33 @@ import pandas as pd
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Product Factory Pro", layout="wide", initial_sidebar_state="expanded")
 
-# --- UI STYLING (WHITE TITLES, BLACK BUTTON TEXT) ---
+# --- UI STYLING (WHITE TEXT, BLACK BUTTON TEXT, POINTER CURSOR) ---
 st.markdown("""
     <style>
         .stApp { background-color: #0E1117; color: #FFFFFF; }
         [data-testid="stSidebar"] { background-color: #161B22; border-right: 1px solid #30363D; }
         
         /* Force All Labels and Titles to WHITE */
-        .stWidgetLabel p, label, .stSelectbox label, .stTextInput label, .stRadio label, h1, h2, h3, h4, h5, h6 { 
+        .stWidgetLabel p, label, .stSelectbox label, .stTextInput label, .stTextArea label, .stRadio label, h1, h2, h3, h4, h5, h6 { 
             color: #FFFFFF !important; 
             font-weight: bold !important; 
             opacity: 1 !important;
         }
-        
-        /* Sidebar Titles specifically */
-        [data-testid="stSidebar"] .stWidgetLabel p { color: #FFFFFF !important; }
 
+        /* Change Grey backgrounds to White/Transparent for Inputs */
+        .stTextInput div, .stSelectbox div, .stTextArea textarea {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: white !important;
+            border: 1px solid #FFFFFF !important;
+        }
+        
         /* FIX: Button Background Blue, Text BLACK */
         .stButton>button {
             width: 100%; border-radius: 8px; border: none;
             background-color: #58A6FF !important; 
-            color: #000000 !important; /* Black text */
+            color: #000000 !important;
             font-weight: bold !important;
+            cursor: pointer !important; /* Cursor Change */
         }
         .stButton>button:hover { 
             background-color: #FFFFFF !important; 
@@ -37,12 +42,22 @@ st.markdown("""
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); 
         }
 
-        /* File Uploader Button Fix */
+        /* FIX: Browse File Button (Blue) */
         [data-testid="stFileUploadDropzone"] button {
             background-color: #58A6FF !important;
             color: #000000 !important;
             font-weight: bold !important;
+            cursor: pointer !important; /* Cursor Change */
+            border: none !important;
         }
+        
+        /* Cursor Pointer for Selectors and Radios */
+        div[data-baseweb="select"], div[role="radiogroup"], input, .stSlider {
+            cursor: pointer !important;
+        }
+
+        /* Table Styling */
+        .stTable { color: white !important; background-color: transparent !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -57,17 +72,10 @@ if category in ["Clothing", "Shoes"]:
     gender = st.sidebar.radio("Target Gender", ["Male", "Female", "Unisex"])
 
 if category == "Clothing":
-    # 1. FABRIC DROPDOWN WITH MANUAL INPUT
     fabric_list = ["Cotton", "Lawn", "Silk", "Linen", "Chiffon", "Jersey", "Denim", "Wool", "Polyester", "Velvet", "Other (Manual)"]
     fabric_choice = st.sidebar.selectbox("Select Fabric", fabric_list)
-    if fabric_choice == "Other (Manual)":
-        attr1 = st.sidebar.text_input("Enter Fabric Type", placeholder="e.g. Bamboo Blend")
-    else:
-        attr1 = fabric_choice
-
-    # 2. AGE GROUP DROPDOWN
-    age_list = ["Newly Born", "Child", "Teenage", "Adult"]
-    attr2 = st.sidebar.selectbox("Age Group", age_list)
+    attr1 = st.sidebar.text_input("Manual Fabric Entry") if fabric_choice == "Other (Manual)" else fabric_choice
+    attr2 = st.sidebar.selectbox("Age Group", ["Newly Born", "Child", "Teenage", "Adult"])
 
 elif category == "Shoes":
     attr1 = st.sidebar.text_input("Material", "Leather")
@@ -87,24 +95,7 @@ else:
 
 prod_name = st.sidebar.text_input("Product Name", "Classic Collection")
 focus_kw = st.sidebar.text_input("Focus Keyword", "premium quality")
-extra_details = st.sidebar.text_area("Further Product Details", placeholder="Specific features, benefits, care instructions...")
-
-# --- PROMPT LOGIC ---
-gen_prompt = f"""
-Act as a Senior E-commerce SEO Copywriter for ChatGPT and Gemini. 
-Product: {prod_name} ({gender if gender else ''} {category})
-Focus Keyword: {focus_kw}
-Attributes: {attr1}, {attr2}
-Details: {extra_details}
-
-Please write:
-1. Meta Title: Standard SEO (max 75 chars), include Focus Keyword.
-2. Meta Description: Persuasive, starts with Focus Keyword (max 160 chars).
-3. URL Slug: Hyphenated, include Focus Keyword (max 60 chars).
-4. Short Description: An engaging H1 Heading including the Focus Keyword, followed by a punchy summary.
-5. Long SEO Description: A humanized, blog-style product story. Use subheadings, bullet points, and a benefit-driven conclusion.
-6. 10 SEO Tags: High-volume tags separated by commas.
-"""
+extra_details = st.sidebar.text_area("Further Product Details")
 
 st.sidebar.divider()
 generate_btn = st.sidebar.button("✨ GENERATE AI PROMPT")
@@ -131,6 +122,7 @@ with tab1:
                 new_img.paste(img, offset)
                 
                 img_io = io.BytesIO()
+                # quality=75 is ideal for balance between SEO speed and clarity
                 new_img.save(img_io, "WEBP", quality=75, method=6)
                 img_bytes = img_io.getvalue()
                 f_name = f"{uploaded_file.name.split('.')[0]}.webp"
@@ -167,6 +159,22 @@ with tab3:
     st.subheader("SEO Prompt for ChatGPT & Gemini")
     if generate_btn:
         st.success("✅ Your humanized SEO prompt is ready!")
-        st.code(gen_prompt, language="markdown")
+        # The prompt includes H1, Long SEO description, and 10 Tags
+        prompt_text = f"""
+        Act as a Senior E-commerce SEO Copywriter for ChatGPT and Gemini.
+        Product: {prod_name} ({category})
+        Attributes: {attr1}, {attr2}, {gender if gender else ''}
+        Focus Keyword: {focus_kw}
+        Details: {extra_details}
+        
+        Generate:
+        1. Meta Title (75 chars)
+        2. Meta Description (160 chars)
+        3. URL Slug
+        4. Short Description with H1 Heading
+        5. Long, humanized blog-style SEO product description
+        6. 10 High-volume SEO tags
+        """
+        st.code(prompt_text, language="markdown")
     else:
-        st.warning("Complete the sidebar details and click 'Generate AI Prompt'.")
+        st.warning("Click 'Generate AI Prompt' in the sidebar.")

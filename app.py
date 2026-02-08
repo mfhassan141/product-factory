@@ -37,7 +37,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR: PROMPT GENERATOR (Logic Fully Restored) ---
+# --- SIDEBAR: PROMPT GENERATOR ---
 st.sidebar.title("🤖 AI Prompt Studio")
 currency = st.sidebar.selectbox("Currency", ["PKR", "USD", "AED", "GBP", "EUR"])
 category = st.sidebar.selectbox("Category", ["Clothing", "Shoes", "Jewelry", "Stationery", "Paper Soap"])
@@ -119,36 +119,59 @@ with tab3:
         prompt_text = f"Product: {prod_name} | Keyword: {focus_kw} | Category: {category} | Group: {attr2}"
         st.code(prompt_text, language="markdown")
 
-# --- TAB 4: SIMPLIFIED SIZE CHART HUB ---
+# --- TAB 4: ENHANCED DYNAMIC SIZE CHART HUB ---
 with tab4:
     if need_size_chart:
-        st.subheader(f"Sizing Guide: {attr2}")
+        st.subheader(f"Detailed Sizing: {attr2}")
         
-        # LOGIC FOR DYNAMIC DATA
+        # --- ENHANCED DYNAMIC DATA LOGIC ---
         if category == "Clothing":
             if attr2 == "Newly Born":
-                data = {"Age": ["0-3M", "3-6M", "6-9M", "9-12M"], "Chest (in)": ["17", "18", "18.5", "19"], "Length (in)": ["14", "15.5", "16.5", "18"]}
+                data = {
+                    "Age (Months)": ["0-3M", "3-6M", "6-9M", "9-12M"],
+                    "Chest (in)": ["17", "18", "18.5", "19"],
+                    "Length (in)": ["14", "15.5", "16.5", "18"]
+                }
             elif attr2 == "Child":
-                data = {"Age Range": ["1-2Y", "2-3Y", "3-4Y", "4-5Y", "5-6Y"], "Chest (in)": ["20-21", "21-22", "22-23", "23-24", "24-25"], "Waist (in)": ["19-20", "20-20.5", "20.5-21", "21-21.5", "21.5-22"]}
+                data = {
+                    "Age Range": ["1-2Y", "2-3Y", "3-4Y", "4-5Y", "5-6Y"],
+                    "Chest (in)": ["20-21", "21-22", "22-23", "23-24", "24-25"],
+                    "Length (in)": ["16", "18", "20", "22", "24"],
+                    "Waist (in)": ["19-20", "20-20.5", "20.5-21", "21-21.5", "21.5-22"]
+                }
             elif attr2 == "Teenage":
-                data = {"Size": ["S", "M", "L", "XL", "XXL"], "Chest (in)": ["30-32", "32-34", "34-36", "36-38", "38-40"], "Length (in)": ["24", "25", "26", "27", "28"]}
+                data = {
+                    "Size": ["S", "M", "L", "XL", "XXL"],
+                    "Chest (in)": ["30-32", "32-34", "34-36", "36-38", "38-40"],
+                    "Waist (in)": ["24-25", "26-27", "28-29", "30-31", "32-33"],
+                    "Length (in)": ["24", "25", "26", "27", "28"]
+                }
             else: # Adult
-                data = {"Size": ["S", "M", "L", "XL", "XXL", "XXXL"], "Chest (in)": ["36-38", "39-41", "42-44", "45-47", "48-50", "51-53"], "Waist (in)": ["30-32", "33-35", "36-38", "39-41", "42-44", "45-47"]}
+                data = {
+                    "Size": ["S", "M", "L", "XL", "XXL", "XXXL"],
+                    "Chest (in)": ["36-38", "39-41", "42-44", "45-47", "48-50", "51-53"],
+                    "Waist (in)": ["30-32", "33-35", "36-38", "39-41", "42-44", "45-47"],
+                    "Length (in)": ["27", "28", "29", "30", "31", "32"]
+                }
         else: # Shoes
-            data = {"EU": ["38", "39", "40", "41", "42", "43", "44"], "UK": ["5", "6", "6.5", "7.5", "8", "9", "10"], "US": ["5.5", "6.5", "7.5", "8.5", "9", "10", "11"]}
+            data = {
+                "EU": ["38", "39", "40", "41", "42", "43", "44"],
+                "UK": ["5", "6", "6.5", "7.5", "8", "9", "10"],
+                "US": ["5.5", "6.5", "7.5", "8.5", "9", "10", "11"]
+            }
         
         df = pd.DataFrame(data)
 
-        # BUTTONS SECTION
+        # DOWNLOAD & COPY INSTRUCTION
         b1, b2 = st.columns([1, 4])
         with b1:
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("📊 DOWNLOAD CSV", data=csv, file_name=f"{attr2}_size_chart.csv", mime="text/csv")
         with b2:
-            st.info("👆 Click the download button for Excel OR select and copy (Ctrl+C) the table below for Word/Manual use.")
+            st.info("👆 Download for Excel/Sheets or highlight and copy (Ctrl+C) the table below for Word.")
 
-        # DISPLAY THE TABLE
+        # DISPLAY ENHANCED TABLE
         st.table(df)
         
     else:
-        st.info("Please select 'Clothing' or 'Shoes' and check the 'Enable Size Chart' box in the sidebar.")
+        st.info("Please select 'Clothing' or 'Shoes' and enable the Size Chart checkbox in the sidebar.")

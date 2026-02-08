@@ -3,6 +3,7 @@ from PIL import Image
 import io
 import zipfile
 from datetime import datetime
+import pandas as pd
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Product Factory Pro", layout="wide", initial_sidebar_state="expanded")
@@ -10,179 +11,149 @@ st.set_page_config(page_title="Product Factory Pro", layout="wide", initial_side
 # --- MODERN DARK SUITE UI STYLING ---
 st.markdown("""
     <style>
-        /* Main background and text */
-        .stApp {
-            background-color: #0E1117;
-            color: #FFFFFF;
-        }
+        .stApp { background-color: #0E1117; color: #FFFFFF; }
+        [data-testid="stSidebar"] { background-color: #161B22; border-right: 1px solid #30363D; }
         
-        /* Sidebar styling */
-        [data-testid="stSidebar"] {
-            background-color: #161B22;
-            border-right: 1px solid #30363D;
-        }
+        /* Sidebar Label Visibility */
+        .stWidgetLabel p { color: #58A6FF !important; font-weight: bold; font-size: 16px; }
         
-        /* Custom Card UI */
-        .status-card {
-            background-color: #1c2128;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 10px;
+        /* Browse Files Button */
+        [data-testid="stFileUploadDropzone"] button {
+            background-color: #58A6FF !important;
+            color: #0E1117 !important;
+            font-weight: bold !important;
         }
 
-        /* Metric styling */
-        div[data-testid="stMetricValue"] {
-            color: #58A6FF !important;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-        }
-        
-        /* Button styling */
-        .stButton>button {
-            width: 100%;
-            border-radius: 8px;
-            border: 1px solid #58A6FF;
-            background-color: transparent;
-            color: #58A6FF;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .stButton>button:hover {
-            background-color: #58A6FF;
-            color: #0E1117;
-            box-shadow: 0 0 15px rgba(88, 166, 255, 0.4);
-        }
+        /* Metric & Tabs */
+        div[data-testid="stMetricValue"] { color: #58A6FF !important; font-family: 'Courier New', monospace; }
+        .stTabs [data-baseweb="tab--active"] { color: #58A6FF !important; border-bottom: 2px solid #58A6FF !important; }
 
-        /* Header styling */
-        h1, h2, h3 {
-            color: #58A6FF !important;
-            letter-spacing: 1px;
-        }
-        
-        /* Tabs styling */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 10px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            background-color: #161B22;
-            border: 1px solid #30363D;
-            border-radius: 5px 5px 0px 0px;
-            padding: 10px 20px;
-            color: white;
-        }
+        /* Tables Styling */
+        .styled-table { margin: 25px 0; font-size: 0.9em; min-width: 400px; border-radius: 5px 5px 0 0; overflow: hidden; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR: DYNAMIC PRODUCT DATA ---
-st.sidebar.header("🕹️ CONTROL PANEL")
+# --- SIDEBAR: PROMPT GENERATOR ---
+st.sidebar.header("🤖 PROMPT GENERATOR")
+currency = st.sidebar.selectbox("Currency", ["PKR", "USD", "AED", "GBP", "EUR"])
+category = st.sidebar.selectbox("Category", ["Clothing", "Shoes", "Jewelry", "Stationery", "Paper Soap"])
 
-category = st.sidebar.selectbox(
-    "Category", 
-    ["Clothing", "Shoes", "Jewelry", "Stationery", "Paper Soap"]
-)
+attr1, attr2, gender = "", "", ""
 
-# Category-specific logic
-attr1, attr2 = "", ""
+if category in ["Clothing", "Shoes"]:
+    gender = st.sidebar.radio("Target Gender", ["Male", "Female", "Unisex"])
+
 if category == "Clothing":
     attr1 = st.sidebar.text_input("Fabric", "Cotton")
     attr2 = st.sidebar.text_input("Age Group", "Adult")
 elif category == "Shoes":
     attr1 = st.sidebar.text_input("Material", "Leather")
-    attr2 = st.sidebar.text_input("Size", "EU 42")
+    attr2 = st.sidebar.text_input("Size Range", "EU 38-44")
 elif category == "Jewelry":
-    attr1 = st.sidebar.text_input("Metal", "Gold")
+    attr1 = st.sidebar.selectbox("Metal", ["Gold", "Silver", "Bronze", "Iron", "Artificial"])
     attr2 = st.sidebar.text_input("Stone", "None")
 elif category == "Stationery":
-    attr1 = st.sidebar.text_input("Type", "Journal")
-    attr2 = st.sidebar.text_input("Paper", "100gsm")
+    attr1 = st.sidebar.selectbox("Item Type", ["Pencil", "Eraser", "Sharpener", "Scale", "Geometry Box", "Journal", "Pen"])
+    attr2 = st.sidebar.text_input("Pack Quantity", "1 unit")
 else:
     attr1 = st.sidebar.text_input("Scent", "Floral")
     attr2 = st.sidebar.text_input("Quantity", "Pack of 5")
 
-prod_name = st.sidebar.text_input("Product Name", "New Arrival")
-target_size = st.sidebar.selectbox("Export Size", [800, 1000, 1200], index=1)
+prod_name = st.sidebar.text_input("Product Name", "Classic Collection")
+focus_kw = st.sidebar.text_input("Focus Keyword", "premium quality")
+target_size = st.sidebar.selectbox("Image Export Size", [800, 1000, 1200], index=1)
+
+# Prompt Logic
+gen_prompt = f"""
+Act as an E-commerce SEO Expert. Generate content for:
+- Product: {prod_name} ({gender} {category})
+- Specifics: {attr1}, {attr2}
+- Target Keyword: {focus_kw}
+
+Please provide:
+1. Meta Title: Standard SEO style (max 75 chars), include Focus Keyword.
+2. Meta Description: Start with the Focus Keyword (max 160 chars).
+3. URL Slug: Clean, hyphenated (max 60 chars), include Focus Keyword.
+4. SEO Tags: 10 relevant tags/hashtags separated by commas.
+"""
 
 st.sidebar.divider()
+generate_btn = st.sidebar.button("✨ GENERATE GEMINI PROMPT")
+generated_sku = f"{category[:2].upper()}-{prod_name[:3].upper()}-{datetime.now().strftime('%M%S')}"
 
-# SKU Logic
-cat_code = category[:2].upper()
-brd_code = prod_name[:3].upper() if prod_name else "GEN"
-generated_sku = f"{cat_code}-{brd_code}-{datetime.now().strftime('%M%S')}"
-
-# --- APP LAYOUT ---
+# --- MAIN AREA ---
 st.title("🚀 PRODUCT CONTENT FACTORY")
+tab1, tab2, tab3 = st.tabs(["📸 IMAGE CONVERTER", "📈 PROFIT CALCULATOR", "♊ GEMINI PROMPT"])
 
-tab1, tab2 = st.tabs(["📸 IMAGE STUDIO", "📈 BUSINESS INTELLIGENCE"])
-
+# --- TAB 1: IMAGE CONVERTER ---
 with tab1:
     st.subheader("Image Optimization Engine")
-    uploaded_files = st.file_uploader("Drop images here", type=['jpg', 'jpeg', 'png', 'webp'], accept_multiple_files=True)
-
+    uploaded_files = st.file_uploader("Upload Images", type=['jpg', 'jpeg', 'png', 'webp'], accept_multiple_files=True)
     if uploaded_files:
         cols = st.columns(4)
         zip_buffer = io.BytesIO()
         count_opt, count_skip = 0, 0
-
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
             for idx, uploaded_file in enumerate(uploaded_files):
                 f_name = uploaded_file.name
-                
                 if f_name.lower().endswith('.webp'):
                     img_bytes = uploaded_file.getvalue()
-                    status = "✅ SKIP (WebP)"
-                    count_skip += 1
+                    status, count_skip = "✅ WebP", count_skip + 1
                 else:
                     img = Image.open(uploaded_file).convert("RGB")
                     new_img = Image.new("RGB", (target_size, target_size), (255, 255, 255))
                     img.thumbnail((target_size, target_size))
-                    offset = ((target_size - img.size[0]) // 2, (target_size - img.size[1]) // 2)
+                    offset = ((target_size-img.size[0])//2, (target_size-img.size[1])//2)
                     new_img.paste(img, offset)
-                    
                     img_io = io.BytesIO()
                     new_img.save(img_io, "WEBP", quality=85)
                     img_bytes = img_io.getvalue()
                     f_name = f"{f_name.split('.')[0]}.webp"
-                    status = "⚙️ OPTIMIZED"
-                    count_opt += 1
-
+                    status, count_opt = "⚙️ Optimized", count_opt + 1
                 zip_file.writestr(f_name, img_bytes)
                 with cols[idx % 4]:
                     st.image(img_bytes, caption=f_name)
                     st.caption(status)
+        st.download_button("📦 DOWNLOAD ALL (ZIP)", zip_buffer.getvalue(), f"files_{datetime.now().strftime('%H%M')}.zip")
 
-        st.divider()
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Total Files", len(uploaded_files))
-        m2.metric("Converted", count_opt)
-        m3.metric("Bypassed", count_skip)
-
-        st.download_button("📦 DOWNLOAD PROCESSED BUNDLE (ZIP)", zip_buffer.getvalue(), 
-                           f"factory_{datetime.now().strftime('%H%M')}.zip", "application/zip")
-
+# --- TAB 2: PROFIT CALCULATOR & SIZE CHART ---
 with tab2:
-    st.subheader("Financial & Inventory Specs")
-    
+    st.subheader("Financial Breakdown")
     col_a, col_b = st.columns(2)
     with col_a:
-        cost_p = st.number_input("Cost Price", value=0.0)
-        sell_p = st.number_input("Selling Price", value=100.0)
+        cost_p = st.number_input(f"Cost Price ({currency})", value=0.0)
+        sell_p = st.number_input(f"Selling Price ({currency})", value=100.0)
     with col_b:
         tax_r = st.slider("Tax/VAT %", 0, 25, 18)
-        
-    # Calculations
+    
     tax_amt = sell_p * (tax_r / 100)
     net_profit = sell_p - (cost_p + tax_amt)
     margin = (net_profit / sell_p * 100) if sell_p > 0 else 0
 
-    with st.container(border=True):
-        st.write("### 💰 Profit Summary")
-        m_a, m_b, m_c = st.columns(3)
-        m_a.metric("Tax Deducted", f"-{tax_amt:.2f}")
-        m_b.metric("Final Profit", f"{net_profit:,.2f}")
-        m_c.metric("Profit Margin", f"{margin:.1f}%")
+    st.container(border=True).metric("Final Profit", f"{currency} {net_profit:,.2f}", f"{margin:.1f}% Margin")
 
-    with st.container(border=True):
-        st.write("### 📋 Production Metadata")
-        st.markdown(f"**Generated SKU:** `{generated_sku}`")
-        st.markdown(f"**Spec Summary:** {category} | {attr1} | {attr2}")
+    # Dynamic Size Chart for Clothing
+    if category == "Clothing":
+        st.divider()
+        st.subheader("📏 Standard Clothing Size Chart (Inches)")
+        size_data = {
+            "Size": ["XS", "S", "M", "L", "XL", "XXL"],
+            "Chest": ["34-36", "36-38", "38-40", "42-44", "46-48", "50-52"],
+            "Waist": ["28-30", "30-32", "32-34", "36-38", "40-42", "44-46"],
+            "Length": ["27", "28", "29", "30", "31", "32"]
+        }
+        df_size = pd.DataFrame(size_data)
+        st.table(df_size)
+        st.info("💡 Standard US/EU sizing. Adjust according to your specific brand measurements.")
+
+# --- TAB 3: GEMINI PROMPT ---
+with tab3:
+    st.subheader("Gemini SEO Prompt")
+    if generate_btn:
+        st.success("✅ Your prompt is ready!")
+        st.code(gen_prompt, language="markdown")
+    else:
+        st.warning("Please fill details in the Sidebar and click 'Generate Prompt'.")
+
+if generate_btn:
+    st.info(f"👉 **SKU Created:** `{generated_sku}`")

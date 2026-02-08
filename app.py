@@ -11,72 +11,33 @@ st.set_page_config(page_title="Product Factory Pro", layout="wide", initial_side
 # --- UI STYLING: DIM SOFT MODE ---
 st.markdown("""
     <style>
-        /* Main App Background - Soft Neutral Grey */
-        .stApp {
-            background-color: #F0F2F6;
-            color: #31333F;
-        }
+        .stApp { background-color: #F0F2F6; color: #31333F; }
+        [data-testid="stSidebar"] { background-color: #E6E9EF; border-right: 1px solid #D1D5DB; }
+        h1, h2, h3, h4, label, .stWidgetLabel p { color: #262730 !important; font-family: 'Inter', sans-serif; }
         
-        /* Sidebar Styling - Slightly Darker Grey for contrast */
-        [data-testid="stSidebar"] {
-            background-color: #E6E9EF;
-            border-right: 1px solid #D1D5DB;
-        }
-
-        /* Typography - Muted Dark Slate */
-        h1, h2, h3, h4, label, .stWidgetLabel p {
-            color: #262730 !important;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Input Fields - Clean White with soft borders */
         .stTextInput input, .stSelectbox div, .stTextArea textarea, .stNumberInput input {
-            background-color: #FFFFFF !important;
-            color: #31333F !important;
-            border: 1px solid #C4C9D0 !important;
-            border-radius: 8px !important;
+            background-color: #FFFFFF !important; color: #31333F !important;
+            border: 1px solid #C4C9D0 !important; border-radius: 8px !important;
         }
 
-        /* BUTTONS - Muted Navy Blue (Less bright) */
         .stButton>button {
-            width: 100%; 
-            border-radius: 8px; 
-            border: none;
-            background-color: #4A90E2 !important; 
-            color: #FFFFFF !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
+            width: 100%; border-radius: 8px; border: none;
+            background-color: #4A90E2 !important; color: #FFFFFF !important;
+            font-weight: 600 !important; cursor: pointer !important;
         }
-        .stButton>button:hover {
-            background-color: #357ABD !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .stButton>button:hover { background-color: #357ABD !important; }
 
-        /* File Uploader - Blue Button */
-        [data-testid="stFileUploadDropzone"] button {
-            background-color: #4A90E2 !important;
-            color: #FFFFFF !important;
-        }
-
-        /* Tabs styling - Subtle */
-        .stTabs [data-baseweb="tab"] {
-            color: #555E6D;
-            padding: 8px 16px;
-        }
         .stTabs [data-baseweb="tab--active"] {
-            color: #4A90E2 !important;
-            border-bottom: 2px solid #4A90E2 !important;
+            color: #4A90E2 !important; border-bottom: 2px solid #4A90E2 !important;
         }
 
-        /* Download Button - Muted Sage Green */
         .stDownloadButton>button {
-            background-color: #52B788 !important;
-            color: #FFFFFF !important;
+            background-color: #52B788 !important; color: #FFFFFF !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR: PROMPT GENERATOR (Logic Fully Intact) ---
+# --- SIDEBAR: PROMPT GENERATOR (Logic Fully Restored) ---
 st.sidebar.title("🤖 AI Prompt Studio")
 currency = st.sidebar.selectbox("Currency", ["PKR", "USD", "AED", "GBP", "EUR"])
 category = st.sidebar.selectbox("Category", ["Clothing", "Shoes", "Jewelry", "Stationery", "Paper Soap"])
@@ -88,13 +49,13 @@ if category == "Clothing":
     fabric_choice = st.sidebar.selectbox("Fabric", ["Cotton", "Lawn", "Silk", "Linen", "Chiffon", "Jersey", "Wool", "Other"])
     attr1 = st.sidebar.text_input("Manual Fabric Entry") if fabric_choice == "Other" else fabric_choice
     attr2 = st.sidebar.selectbox("Age Group", ["Newly Born", "Child", "Teenage", "Adult"])
-    need_size_chart = st.sidebar.checkbox("Include Size Chart?", value=True)
+    need_size_chart = st.sidebar.checkbox("Enable Size Chart Tab?", value=True)
 
 elif category == "Shoes":
     gender = st.sidebar.radio("Target Gender", ["Male", "Female", "Unisex"])
     attr1 = st.sidebar.text_input("Material", "Leather")
     attr2 = st.sidebar.text_input("Size Range", "EU 38-44")
-    need_size_chart = st.sidebar.checkbox("Include Shoe Size Chart?", value=True)
+    need_size_chart = st.sidebar.checkbox("Enable Shoe Size Tab?", value=True)
 
 elif category == "Jewelry":
     attr1 = st.sidebar.selectbox("Metal", ["Gold", "Silver", "Bronze", "Iron", "Artificial"])
@@ -108,7 +69,7 @@ elif category == "Stationery":
     attr2 = st.sidebar.text_input("Pack Quantity", "1 set")
     need_size_chart = False
 
-else: # Paper Soap
+else:
     attr1 = st.sidebar.text_input("Scent", "Floral")
     attr2 = st.sidebar.text_input("Quantity", "Pack of 5")
     need_size_chart = False
@@ -122,7 +83,7 @@ generate_btn = st.sidebar.button("✨ GENERATE AI PROMPT")
 
 # --- MAIN AREA ---
 st.title("🚀 Product Content Factory")
-tab1, tab2, tab3 = st.tabs(["📸 IMAGE CONVERTER", "📈 PROFIT CALCULATOR", "♊ AI PROMPT HUB"])
+tab1, tab2, tab3, tab4 = st.tabs(["📸 IMAGE CONVERTER", "📈 PROFIT CALCULATOR", "♊ AI PROMPT HUB", "📏 SIZE CHART HUB"])
 
 # --- TAB 1: IMAGE CONVERTER ---
 with tab1:
@@ -143,55 +104,51 @@ with tab1:
                 zip_file.writestr(f"{uploaded_file.name.split('.')[0]}.webp", img_io.getvalue())
         st.download_button("📦 DOWNLOAD IMAGES (ZIP)", zip_buffer.getvalue(), "images.zip")
 
-# --- TAB 2: PROFIT CALCULATOR & SIZE CHART ---
+# --- TAB 2: PROFIT CALCULATOR ---
 with tab2:
     st.subheader("Profit Breakdown")
     c1, c2 = st.columns(2)
     cost_p = c1.number_input(f"Cost Price", min_value=0.0)
     sell_p = c2.number_input(f"Selling Price", min_value=0.0)
-    net_profit = sell_p - cost_p
-    st.metric("Net Profit", f"{currency} {net_profit:,.2f}")
-
-    if need_size_chart:
-        st.divider()
-        if category == "Clothing":
-            st.subheader("📏 Clothing Size Chart")
-            size_data = {
-                "Size": ["XS", "S", "M", "L", "XL", "XXL"],
-                "Chest": ["34", "36", "38", "40", "44", "48"],
-                "Waist": ["28", "30", "32", "34", "38", "42"],
-                "Length": ["27", "28", "29", "30", "31", "32"]
-            }
-        else: # Shoes
-            st.subheader("👟 Shoe Size Conversion")
-            size_data = {
-                "EU Size": ["38", "39", "40", "41", "42", "43", "44"],
-                "UK Size": ["5", "6", "6.5", "7.5", "8", "9", "10"],
-                "US Size": ["5.5", "6.5", "7.5", "8.5", "9", "10", "11"]
-            }
-        
-        df = pd.DataFrame(size_data)
-        st.table(df)
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Chart (CSV)", data=csv, file_name=f"{category}_size_chart.csv", mime="text/csv")
+    st.metric("Net Profit", f"{currency} {sell_p - cost_p:,.2f}")
 
 # --- TAB 3: AI PROMPT HUB ---
 with tab3:
     if generate_btn:
         st.success("✅ SEO Prompt Generated")
-        prompt_text = f"""
-        Act as a Senior E-commerce SEO Copywriter.
-        Product: {prod_name} ({gender if gender else ''} {category})
-        Attributes: {attr1}, {attr2}
-        Focus Keyword: {focus_kw}
-        Details: {extra_details}
-
-        Requirements:
-        1. Meta Title (75 chars)
-        2. Meta Description (160 chars)
-        3. URL Slug
-        4. Short Description with H1 Heading
-        5. Long, humanized blog-style product story
-        6. 10 High-volume SEO tags
-        """
+        prompt_text = f"Product: {prod_name} | Keyword: {focus_kw} | Category: {category} | Group: {attr2}"
         st.code(prompt_text, language="markdown")
+
+# --- TAB 4: SIMPLIFIED SIZE CHART HUB ---
+with tab4:
+    if need_size_chart:
+        st.subheader(f"Sizing Guide: {attr2}")
+        
+        # LOGIC FOR DYNAMIC DATA
+        if category == "Clothing":
+            if attr2 == "Newly Born":
+                data = {"Age": ["0-3M", "3-6M", "6-9M", "9-12M"], "Chest (in)": ["17", "18", "18.5", "19"], "Length (in)": ["14", "15.5", "16.5", "18"]}
+            elif attr2 == "Child":
+                data = {"Age Range": ["1-2Y", "2-3Y", "3-4Y", "4-5Y", "5-6Y"], "Chest (in)": ["20-21", "21-22", "22-23", "23-24", "24-25"], "Waist (in)": ["19-20", "20-20.5", "20.5-21", "21-21.5", "21.5-22"]}
+            elif attr2 == "Teenage":
+                data = {"Size": ["S", "M", "L", "XL", "XXL"], "Chest (in)": ["30-32", "32-34", "34-36", "36-38", "38-40"], "Length (in)": ["24", "25", "26", "27", "28"]}
+            else: # Adult
+                data = {"Size": ["S", "M", "L", "XL", "XXL", "XXXL"], "Chest (in)": ["36-38", "39-41", "42-44", "45-47", "48-50", "51-53"], "Waist (in)": ["30-32", "33-35", "36-38", "39-41", "42-44", "45-47"]}
+        else: # Shoes
+            data = {"EU": ["38", "39", "40", "41", "42", "43", "44"], "UK": ["5", "6", "6.5", "7.5", "8", "9", "10"], "US": ["5.5", "6.5", "7.5", "8.5", "9", "10", "11"]}
+        
+        df = pd.DataFrame(data)
+
+        # BUTTONS SECTION
+        b1, b2 = st.columns([1, 4])
+        with b1:
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📊 DOWNLOAD CSV", data=csv, file_name=f"{attr2}_size_chart.csv", mime="text/csv")
+        with b2:
+            st.info("👆 Click the download button for Excel OR select and copy (Ctrl+C) the table below for Word/Manual use.")
+
+        # DISPLAY THE TABLE
+        st.table(df)
+        
+    else:
+        st.info("Please select 'Clothing' or 'Shoes' and check the 'Enable Size Chart' box in the sidebar.")

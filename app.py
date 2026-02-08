@@ -3,7 +3,50 @@ from PIL import Image
 import io
 import zipfile
 from datetime import datetime
-
+# --- CUSTOM UI STYLING (Modern Dark Suite) ---
+st.markdown("""
+    <style>
+        /* Main background and text */
+        .stApp {
+            background-color: #0E1117;
+            color: #FFFFFF;
+        }
+        
+        /* Sidebar styling */
+        [data-testid="stSidebar"] {
+            background-color: #161B22;
+            border-right: 1px solid #30363D;
+        }
+        
+        /* Metric Card styling */
+        div[data-testid="stMetricValue"] {
+            color: #58A6FF;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Button styling */
+        .stButton>button {
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #58A6FF;
+            background-color: transparent;
+            color: #58A6FF;
+            transition: 0.3s;
+        }
+        .stButton>button:hover {
+            background-color: #58A6FF;
+            color: #0E1117;
+            box-shadow: 0 0 10px #58A6FF;
+        }
+        
+        /* Header styling */
+        h1, h2, h3 {
+            color: #58A6FF !important;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Product Content Factory Pro", layout="wide")
 
@@ -142,3 +185,4 @@ if uploaded_files:
 
 else:
     st.warning("Please upload images to begin.")
+
